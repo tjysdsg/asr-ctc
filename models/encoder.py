@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from typing import Optional, Tuple
+from typing import Tuple
 
 from models.layers import (
     LayerNorm,
@@ -52,14 +52,19 @@ class EncoderLayer(nn.Module):
             torch.Tensor: Mask tensor (#batch, 1, time).
 
         """
-        # TODO: attention with residual connection
+        # attention with residual connection
         # mask is used in the attention module
         # x -> norm1 -> att -> dropout -> + -> x
         # |_______________________________|
+        x_norm = self.norm1(x)
+        x += self.dropout(
+            self.self_attn(x_norm, x_norm, x_norm, mask)
+        )
 
-        # TODO: feed-forward network with residual connection
+        # feed-forward network with residual connection
         # x -> norm2 -> ffn -> dropout -> + -> x
         # |_______________________________|
+        x += self.dropout(self.feed_forward(self.norm2(x)))
 
         return x, mask
 
@@ -76,8 +81,6 @@ class TransformerEncoder(torch.nn.Module):
         dropout_rate: dropout rate
         attention_dropout_rate: dropout rate in attention
         positional_dropout_rate: dropout rate after adding positional encoding
-        input_layer: input layer type
-        padding_idx: padding_idx for input_layer=embed
     """
 
     def __init__(
@@ -123,26 +126,40 @@ class TransformerEncoder(torch.nn.Module):
             self,
             xs_pad: torch.Tensor,
             ilens: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Embed positions in tensor.
 
         Args:
             xs_pad: input tensor (B, L, D)
             ilens: input length (B)
-            prev_states: Not to be used now.
         Returns:
             position embedded tensor and mask
         """
         # prepare masks
         masks = (~make_pad_mask(ilens)[:, None, :]).to(xs_pad.device)
 
-        # TODO: apply convolutional subsampling, i.e., self.embed
+        # apply convolutional subsampling
+        xs_pad, masks = self.embed(xs_pad, masks)
 
-        # TODO: forward encoder layers
+        # forward encoder layers
+        xs_pad, masks = self.encoders(xs_pad, masks)
 
         # apply another layer norm at the end
         xs_pad = self.after_norm(xs_pad)
 
         olens = masks.squeeze(1).sum(1)
-
         return xs_pad, olens
+
+
+def test_transformer_encoder():
+    import random
+    batch_size = 16
+    input_size = 32
+    seq_len = 64
+    encoder = TransformerEncoder(32)
+
+    x = torch.rand((batch_size, seq_len, input_size))
+    ilens = torch.tensor([random.randint(10, seq_len) for _ in range(batch_size)])
+    res, olens = encoder(x, ilens)
+    print(res.shape)
+    print(olens)
