@@ -163,8 +163,9 @@ class PositionwiseFeedForward(torch.nn.Module):
 
     def forward(self, x):
         """Forward function."""
-        # TODO: x -> w1 -> activation -> dropout -> w2
-
+        x = self.activation(self.w_1(x))
+        x = self.dropout(x)
+        x = self.w_2(x)
         return x
 
 
@@ -265,3 +266,31 @@ class MultiHeadedAttention(nn.Module):
         q, k, v = self.forward_qkv(query, key, value)
         scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_k)
         return self.forward_attention(v, scores, mask)
+
+
+def test_positionwise_feed_forward():
+    pwff = PositionwiseFeedForward(5, 8, 0.1)
+    x = torch.rand((4, 5))
+    res = pwff(x)
+    assert res.shape == x.shape
+    print(res)
+
+
+def test_multihead_attention():
+    n_head = 4
+    n_feat = 8
+    seq_len1 = 32
+    seq_len2 = 64
+    batch_size = 16
+    att = MultiHeadedAttention(n_head, n_feat, 0.1)
+
+    q = torch.rand((batch_size, seq_len1, n_feat))
+    k = torch.rand((batch_size, seq_len2, n_feat))
+    v = torch.rand((batch_size, seq_len2, n_feat))
+    mask = torch.rand((batch_size, seq_len1, seq_len2))
+
+    res = att(q, k, v, mask)
+    assert res.shape[0] == batch_size
+    assert res.shape[1] == seq_len1
+    assert res.shape[2] == n_feat
+    print(res)
