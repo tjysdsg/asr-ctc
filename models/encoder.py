@@ -57,14 +57,14 @@ class EncoderLayer(nn.Module):
         # x -> norm1 -> att -> dropout -> + -> x
         # |_______________________________|
         x_norm = self.norm1(x)
-        x += self.dropout(
+        x = x + self.dropout(
             self.self_attn(x_norm, x_norm, x_norm, mask)
         )
 
         # feed-forward network with residual connection
         # x -> norm2 -> ffn -> dropout -> + -> x
         # |_______________________________|
-        x += self.dropout(self.feed_forward(self.norm2(x)))
+        x = x + self.dropout(self.feed_forward(self.norm2(x)))
 
         return x, mask
 
