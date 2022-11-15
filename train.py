@@ -9,7 +9,7 @@ from trainer import Trainer
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 
-def get_parser(parser=None, required=True):
+def get_parser(parser=None):
     if parser is None:
         parser = configargparse.ArgumentParser(
             description="Train an automatic speech recognition (ASR) model",
@@ -26,7 +26,7 @@ def get_parser(parser=None, required=True):
 
     ## General utils
     parser.add_argument(
-        "--tag", type=str, help="Experiment Tag for storing logs, models"
+        "--tag", type=str, default="asr", help="Experiment Tag for storing logs, models"
     )
     parser.add_argument("--seed", default=2022, type=int, help="Random seed")
     parser.add_argument(
@@ -62,7 +62,7 @@ def get_parser(parser=None, required=True):
         help="Output Data Directory/Experiment Directory",
     )
 
-    ## Encoder related; TODO: fix this
+    ## Encoder related
     parser.add_argument(
         "--idim", type=int, default=83, help="Input Feature Size (don't need to change)"
     )
@@ -98,7 +98,7 @@ def get_parser(parser=None, required=True):
         default=1,
     )
 
-    ## Optimization related; TODO: add warmup scheduler
+    ## Optimization related
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--grad_clip", type=float, default=5)
     parser.add_argument("--wdecay", type=float, default=0, help="Weight decay")
@@ -132,7 +132,7 @@ def get_parser(parser=None, required=True):
     return parser
 
 
-def main(cmd_args):
+def load_configs(cmd_args):
     ## Return the arguments from parser
     parser = get_parser()
     args, _ = parser.parse_known_args(cmd_args)
@@ -165,8 +165,12 @@ def main(cmd_args):
     args.char_list = char_list
     args.odim = len(char_list)
 
-    ## Start training
-    trainer = Trainer(args)
+    return args
+
+
+def main(cmd_args):
+    configs = load_configs(cmd_args)
+    trainer = Trainer(configs)
     trainer.train()
 
 

@@ -1,6 +1,7 @@
 from typing import Union
 
 import torch
+# noinspection PyUnresolvedReferences
 from torch.optim.lr_scheduler import _LRScheduler
 
 

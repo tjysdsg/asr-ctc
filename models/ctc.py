@@ -38,11 +38,21 @@ class CTC(nn.Module):
         Returns:
             results: list of lists of ints
         """
-
-        # TODO: implement CTC greedy decoding
-
         # 1. apply linear projection and take argmax for each time step
+        x = torch.argmax(self.projection(hs_pad), dim=-1)  # (B, T)
+        x = x.detach().cpu().numpy()
 
         # 2. for each sample in the batch, merge repeated tokens and remove the blank token (index is 0)
+        batch_size = x.shape[0]
+        T = x.shape[1]
+
+        results = [[] for _ in range(batch_size)]
+        for i in range(batch_size):
+            prev = 0
+            for t in range(T):
+                token = x[i][t]
+                if token != 0 and token != prev:
+                    results[i].append(token)
+                prev = token
 
         return results

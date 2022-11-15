@@ -44,13 +44,14 @@ class ASRModel(torch.nn.Module):
         :params torch.LongTensor ys_ref- Padded Text Tokens
         :params list ylen- Lengths of unpadded text sequences
         """
-        # TODO: implement forward of the ASR model
-
         # 1. Encoder forward (CNN + Transformer)
+        xs, xlens = self.encoder(xs, xlens)
 
         # 2. Compute CTC Loss
+        loss = self.ctc(xs, xlens, ys_ref, ylen)
 
         # 3. Compute stats by calling `self.stat_calculator.compute_wer`
+        wer = self.stat_calculator.compute_wer(self.ctc.greedy_search(xs), ys_ref)
 
         return loss, wer
 
@@ -60,10 +61,32 @@ class ASRModel(torch.nn.Module):
         :params torch.Tensor xs- Speech feature input
         :params list xlens- Lengths of unpadded feature sequences
         """
-        # TODO: implement CTC greedy decoding for the ASR model
-
         # 1. forward encoder
+        xs, xlens = self.encoder(xs, xlens)
 
         # 2. get the predictions by calling `self.ctc.greedy_search`
+        predictions = self.ctc.greedy_search(xs)
 
         return predictions
+
+
+def test_asr_forward():
+    import random
+    from train import load_configs
+    configs = load_configs(["--out-dir=exp", "--tag=test"])
+
+    batch_size = 16
+    input_size = configs.idim
+    x_max_len = 256
+    y_max_len = 8
+    asr = ASRModel(configs)
+
+    x = torch.rand((batch_size, x_max_len, input_size))
+    xlens = torch.tensor([random.randint(x_max_len - 50, x_max_len) for _ in range(batch_size)])
+
+    y = torch.randint(0, 100, (batch_size, y_max_len))
+    ylens = torch.tensor([y_max_len for _ in range(batch_size)])
+
+    loss, wer = asr(x, xlens, y, ylens)
+    print('loss:', loss)
+    print('wer:', wer)
