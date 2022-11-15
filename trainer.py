@@ -117,7 +117,7 @@ class Trainer:
         self.model.train()
 
         for i, (feats, feat_lens, target, target_lens, train_keys) in enumerate(
-            self.train_sampler
+                self.train_sampler
         ):
             feats, feat_lens, target, target_lens = to_device(
                 (feats, feat_lens, target, target_lens),
@@ -158,7 +158,7 @@ class Trainer:
 
         with torch.no_grad():
             for i, (feats, feat_lens, target, target_lens, valid_keys) in enumerate(
-                self.valid_sampler
+                    self.valid_sampler
             ):
                 feats, feat_lens, target, target_lens = to_device(
                     (feats, feat_lens, target, target_lens),

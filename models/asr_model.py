@@ -31,11 +31,11 @@ class ASRModel(torch.nn.Module):
         self.stat_calculator = StatsCalculator(params)
 
     def forward(
-        self,
-        xs,
-        xlens,
-        ys_ref,
-        ylen,
+            self,
+            xs,
+            xlens,
+            ys_ref,
+            ylen,
     ):
         """Forward propogation for ASRModel
 

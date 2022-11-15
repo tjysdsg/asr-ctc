@@ -164,7 +164,7 @@ class PositionwiseFeedForward(torch.nn.Module):
     def forward(self, x):
         """Forward function."""
         # TODO: x -> w1 -> activation -> dropout -> w2
-        
+
         return x
 
 

@@ -11,7 +11,6 @@ from models.asr_model import ASRModel
 from loader import create_loader
 from utils import to_device
 
-
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 
@@ -85,7 +84,7 @@ def main(cmd_args):
     with torch.no_grad():
         model.eval()
         for i, (feats, feat_lens, target, target_lens, test_keys) in enumerate(
-            test_loader
+                test_loader
         ):
             if target is not None:
                 feats, feat_lens, target, target_lens = to_device(

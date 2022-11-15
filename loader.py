@@ -9,11 +9,11 @@ from utils import pad_list
 
 
 def create_loader(
-    data: dict,
-    params: configargparse.Namespace,
-    is_train: bool,
-    min_batch_size: int = 1,
-    shortest_first: bool = False,
+        data: dict,
+        params: configargparse.Namespace,
+        is_train: bool,
+        min_batch_size: int = 1,
+        shortest_first: bool = False,
 ):
     """Creates batches with different batch sizes which maximizes the number of bins up to `batch_bins`.
 

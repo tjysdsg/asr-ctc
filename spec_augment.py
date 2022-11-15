@@ -8,7 +8,7 @@ import torch
 
 
 def specaug(
-    spec, W=5, F=30, T=40, num_freq_masks=2, num_time_masks=2, replace_with_zero=False
+        spec, W=5, F=30, T=40, num_freq_masks=2, num_time_masks=2, replace_with_zero=False
 ):
     """SpecAugment
 
@@ -125,12 +125,12 @@ def time_mask(spec, T=40, num_masks=1, replace_with_zero=False):
 
 
 def sparse_image_warp(
-    img_tensor,
-    source_control_point_locations,
-    dest_control_point_locations,
-    interpolation_order=2,
-    regularization_weight=0.0,
-    num_boundaries_points=0,
+        img_tensor,
+        source_control_point_locations,
+        dest_control_point_locations,
+        interpolation_order=2,
+        regularization_weight=0.0,
+        num_boundaries_points=0,
 ):
     device = img_tensor.device
     control_point_flows = dest_control_point_locations - source_control_point_locations
@@ -181,11 +181,11 @@ def create_dense_flows(flattened_flows, batch_size, image_height, image_width):
 
 
 def interpolate_spline(
-    train_points,
-    train_values,
-    query_points,
-    order,
-    regularization_weight=0.0,
+        train_points,
+        train_values,
+        query_points,
+        order,
+        regularization_weight=0.0,
 ):
     # First, fit the spline to the observed data.
     w, v = solve_interpolation(train_points, train_values, order, regularization_weight)
@@ -374,7 +374,7 @@ def dense_image_warp(image, flow):
 
 
 def interpolate_bilinear(
-    grid, query_points, name="interpolate_bilinear", indexing="ij"
+        grid, query_points, name="interpolate_bilinear", indexing="ij"
 ):
     """Similar to Matlab's interp2 function.
 

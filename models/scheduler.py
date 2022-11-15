@@ -12,14 +12,13 @@ class WarmupLR(_LRScheduler):
              * min(step ** -0.5, step * warmup_step ** -1.5)
 
     Note that the maximum lr equals to optimizer.lr in this scheduler.
-
     """
 
     def __init__(
-        self,
-        optimizer: torch.optim.Optimizer,
-        warmup_steps: Union[int, float] = 25000,
-        last_epoch: int = -1,
+            self,
+            optimizer: torch.optim.Optimizer,
+            warmup_steps: Union[int, float] = 25000,
+            last_epoch: int = -1,
     ):
         self.warmup_steps = warmup_steps
 
@@ -34,7 +33,7 @@ class WarmupLR(_LRScheduler):
         step_num = self.last_epoch + 1
         return [
             lr
-            * self.warmup_steps**0.5
-            * min(step_num**-0.5, step_num * self.warmup_steps**-1.5)
+            * self.warmup_steps ** 0.5
+            * min(step_num ** -0.5, step_num * self.warmup_steps ** -1.5)
             for lr in self.base_lrs
         ]

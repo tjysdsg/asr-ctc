@@ -26,11 +26,11 @@ class EncoderLayer(nn.Module):
     """
 
     def __init__(
-        self,
-        size,
-        self_attn,
-        feed_forward,
-        dropout_rate,
+            self,
+            size,
+            self_attn,
+            feed_forward,
+            dropout_rate,
     ):
         super().__init__()
         self.self_attn = self_attn
@@ -57,7 +57,6 @@ class EncoderLayer(nn.Module):
         # x -> norm1 -> att -> dropout -> + -> x
         # |_______________________________|
 
-
         # TODO: feed-forward network with residual connection
         # x -> norm2 -> ffn -> dropout -> + -> x
         # |_______________________________|
@@ -82,15 +81,15 @@ class TransformerEncoder(torch.nn.Module):
     """
 
     def __init__(
-        self,
-        input_size: int,
-        output_size: int = 256,
-        attention_heads: int = 4,
-        linear_units: int = 2048,
-        num_blocks: int = 6,
-        dropout_rate: float = 0.1,
-        positional_dropout_rate: float = 0.1,
-        attention_dropout_rate: float = 0.0,
+            self,
+            input_size: int,
+            output_size: int = 256,
+            attention_heads: int = 4,
+            linear_units: int = 2048,
+            num_blocks: int = 6,
+            dropout_rate: float = 0.1,
+            positional_dropout_rate: float = 0.1,
+            attention_dropout_rate: float = 0.0,
     ):
         super().__init__()
         self._output_size = output_size
@@ -121,9 +120,9 @@ class TransformerEncoder(torch.nn.Module):
         return self._output_size
 
     def forward(
-        self,
-        xs_pad: torch.Tensor,
-        ilens: torch.Tensor,
+            self,
+            xs_pad: torch.Tensor,
+            ilens: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:
         """Embed positions in tensor.
 
@@ -139,9 +138,7 @@ class TransformerEncoder(torch.nn.Module):
 
         # TODO: apply convolutional subsampling, i.e., self.embed
 
-
         # TODO: forward encoder layers
-
 
         # apply another layer norm at the end
         xs_pad = self.after_norm(xs_pad)
