@@ -52,7 +52,6 @@ class ASRModel(torch.nn.Module):
         loss = self.ctc(xs, xlens, ys_ref, ylen)
 
         # 3. Compute stats by calling `self.stat_calculator.compute_wer`
-        # TODO: avoid this during training
         wer = self.stat_calculator.compute_wer(self.ctc.greedy_search(xs), ys_ref)
 
         return loss, wer

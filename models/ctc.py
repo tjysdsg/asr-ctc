@@ -94,6 +94,7 @@ class CTC(nn.Module):
         return results
 
     def _beam_search_trellis(self, x: np.ndarray, length: int, beam_size: int, blank=0):
+        # TODO: language model
         dim = x.shape[1]
 
         # running_hyps[b] = [
