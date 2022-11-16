@@ -1,5 +1,5 @@
 from typing import Tuple
-
+from collections import defaultdict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -73,7 +73,7 @@ class CTC(nn.Module):
             results: list of lists of ints
         """
         # 1. apply linear projection and take argmax for each time step
-        x = F.log_softmax(self.projection(hs_pad), dim=-1)  # (B, T, odim)
+        x = F.softmax(self.projection(hs_pad), dim=-1)  # (B, T, odim)
 
         # 2. beam search in parallel
         x = x.detach().cpu().numpy()
@@ -93,30 +93,59 @@ class CTC(nn.Module):
             results[i] = self._beam_search_trellis(x[i], lens[i], beam_size)
         return results
 
-    def _beam_search_trellis(self, x: np.ndarray, length: int, beam_size: int, blank=0):
-        # TODO: language model
+    def _beam_search_trellis(self, x: np.ndarray, length: int, beam_size: int, blank=0, min_threshold=0.001):
         dim = x.shape[1]
 
-        # running_hyps[b] = [
-        #   (seq, score)  # hyp 1
-        #   hyp_2
-        #   ...
-        #   hyp_n  # n = beam_size
-        # ]
-        running_hyps = [([0], 0.0)]
+        hyps = ['']
+        pb = defaultdict(int)  # prob_prefix_ends_with_blank
+        pnb = defaultdict(int)  # prob_prefix_ends_with_non_blank
+        pb[''] = 1
+        pnb[''] = 1
         for t in range(length):
-            new_hyps = []
-            for hyp in running_hyps:  # type: Tuple[list, float]
-                for i in range(dim):
-                    seq = hyp[0] + [i]  # copy
-                    new_hyps.append((seq, hyp[1] + x[t][i]))
+            candidate_idx = [i for i in range(dim) if x[t][i] > min_threshold]
 
-            running_hyps = sorted(new_hyps, key=lambda h: h[1], reverse=True)[:beam_size]
+            new_pb = defaultdict(int)
+            new_pnb = defaultdict(int)
+            for prefix in hyps:
+                L = prefix.split(' ')
+                for i in candidate_idx:
+                    P = x[t][i]
+
+                    if i == blank:  # extend with a blank
+                        new_pb[prefix] += P * (pb[prefix] + pnb[prefix])
+                    else:  # extend with a non-blank
+                        new_prefix = f'{prefix} {i}'
+
+                        if len(L) > 0 and L[-1] == str(i):  # repeating the last token
+                            new_pnb[new_prefix] += P + pb[prefix]
+                            new_pnb[prefix] += P * pnb[prefix]
+                        # elif False:  # TODO: word language model
+                        #     pass
+                        else:  # extend with other non-blank token without ending the current word
+                            new_pnb[new_prefix] += P * (pb[prefix] + pnb[prefix])
+
+                        # make use of discarded prefixes
+                        if new_prefix not in hyps:
+                            new_pb[new_prefix] += x[t][blank] * (pb[new_prefix] + pnb[new_prefix])
+                            new_pnb[new_prefix] += P * pnb[new_prefix]
+
+            pb = new_pb
+            pnb = new_pnb
+
+            # merge pnb and pb
+            hyp2score = pb
+            for k in pnb.keys():
+                hyp2score[k] += pnb[k]
+
+            # top k
+            hyps = sorted(hyp2score, key=lambda l: hyp2score[l], reverse=True)[:beam_size]
+            # TODO: beta term: * (len(W(l)) + 1) ** beta
 
         # clean
         result = []
         prev = blank
-        for token in running_hyps[0][0]:
+        tokens = [int(e) for e in hyps[0].strip(' ').split(' ')]
+        for token in tokens:
             if token != blank and token != prev:
                 result.append(token)
             prev = token
