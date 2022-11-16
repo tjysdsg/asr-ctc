@@ -4,7 +4,7 @@ import random
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
-
+from spec_augment import specaug
 from utils import pad_list
 
 
@@ -119,7 +119,7 @@ class MiniBatchSampler:
     def __iter__(self):
         if self.shuffle:
             random.shuffle(self.batches)
-            print(f"[info] Minibatches have been randomly shuffled.")
+            # print(f"[info] Minibatches have been randomly shuffled.")
         for bt in self.batches:
             yield bt
 
@@ -162,6 +162,10 @@ class ASRDataset(Dataset):
             else None
         )
         target_len = len(target) if target is not None else 0
+
+        # specaugment
+        if self.is_train:
+            audio_feat = specaug(audio_feat)
 
         return audio_feat, feat_len, target, target_len, idx
 
