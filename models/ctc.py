@@ -129,5 +129,5 @@ def test_beam_search():
 
     ctc = CTC(dim, dim)
     x = torch.rand((batch_size, T, dim))
-    res = ctc.beam_search(x, dim // 2)
+    res = ctc.beam_search(x, [T for _ in range(batch_size)], dim // 2)
     print(res)

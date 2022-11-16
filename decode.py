@@ -40,7 +40,7 @@ def get_parser(parser=None):
     parser.add_argument(
         "--beam_size",
         type=int,
-        default=10,
+        default=-1,  # by default use greedy search
     )
 
     return parser
@@ -101,7 +101,11 @@ def main(cmd_args):
                     (feats, feat_lens), next(model.parameters()).device
                 )
 
-            preds = model.decode_beam(feats, feat_lens)  # list of lists of ints
+            if train_params.beam_size > 0:
+                preds = model.decode_beam(feats, feat_lens)  # list of lists of ints
+            else:
+                preds = model.decode_greedy(feats, feat_lens)  # list of lists of ints
+
             for key, pred in zip(test_keys, preds):
                 tokens = [
                     train_params.char_list[x]
@@ -109,7 +113,7 @@ def main(cmd_args):
                     if x != train_params.text_pad
                 ]
                 string = "".join(tokens).replace("▁", " ").strip()
-                logging.info(string)
+                # print(string)
                 output_dict[key] = string
 
             if target is not None:
