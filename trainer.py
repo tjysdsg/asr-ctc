@@ -200,11 +200,12 @@ class Trainer:
     def save_model(self):
         """Save the model snapshot after every epoch of training."""
         if self.val_stats["loss"] < self.val_stats["best_loss"]:
-            old_ckpt = os.path.join(
-                self.params.model_dir, f'epoch{self.val_stats["best_epoch"]}.pth'
-            )
-            if os.path.exists(old_ckpt):
-                os.remove(old_ckpt)
+            # TODO: keep nbest models and average them
+            # old_ckpt = os.path.join(
+            #     self.params.model_dir, f'epoch{self.val_stats["best_epoch"]}.pth'
+            # )
+            # if os.path.exists(old_ckpt):
+            #     os.remove(old_ckpt)
             self.val_stats["best_epoch"] = self.epoch
             self.val_stats["best_loss"] = self.val_stats["loss"]
 

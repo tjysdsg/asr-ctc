@@ -14,7 +14,7 @@ from utils import to_device
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 
-def get_parser(parser=None, required=True):
+def get_parser(parser=None):
     if parser is None:
         parser = configargparse.ArgumentParser(
             description="Decode a trained model",
@@ -37,6 +37,11 @@ def get_parser(parser=None, required=True):
         "--ckpt_name", default="epoch40.pth", type=str, help="Checkpoint name"
     )
     parser.add_argument("--decode_tag", default="test", type=str, help="Decoding tag")
+    parser.add_argument(
+        "--beam_size",
+        type=int,
+        default=10,
+    )
 
     return parser
 
@@ -96,14 +101,16 @@ def main(cmd_args):
                     (feats, feat_lens), next(model.parameters()).device
                 )
 
-            preds = model.decode_greedy(feats, feat_lens)  # list of lists of ints
+            preds = model.decode_beam(feats, feat_lens)  # list of lists of ints
             for key, pred in zip(test_keys, preds):
                 tokens = [
                     train_params.char_list[x]
                     for x in pred
                     if x != train_params.text_pad
                 ]
-                output_dict[key] = "".join(tokens).replace("▁", " ").strip()
+                string = "".join(tokens).replace("▁", " ").strip()
+                logging.info(string)
+                output_dict[key] = string
 
             if target is not None:
                 for key, ref in zip(test_keys, target):

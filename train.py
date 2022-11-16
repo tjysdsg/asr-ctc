@@ -129,6 +129,12 @@ def get_parser(parser=None):
         "--log_interval", default=200, type=int, help="Log interval in batches."
     )
 
+    ## Decoding related
+    parser.add_argument(
+        "--beam_size",
+        type=int,
+        default=10,
+    )
     return parser
 
 

@@ -29,6 +29,7 @@ class ASRModel(torch.nn.Module):
         )
         self.ctc = CTC(odim=params.odim, idim=params.hidden_dim)
         self.stat_calculator = StatsCalculator(params)
+        self.beam = params.beam_size
 
     def forward(
             self,
@@ -51,6 +52,7 @@ class ASRModel(torch.nn.Module):
         loss = self.ctc(xs, xlens, ys_ref, ylen)
 
         # 3. Compute stats by calling `self.stat_calculator.compute_wer`
+        # TODO: avoid this during training
         wer = self.stat_calculator.compute_wer(self.ctc.greedy_search(xs), ys_ref)
 
         return loss, wer
@@ -67,6 +69,11 @@ class ASRModel(torch.nn.Module):
         # 2. get the predictions by calling `self.ctc.greedy_search`
         predictions = self.ctc.greedy_search(xs)
 
+        return predictions
+
+    def decode_beam(self, xs, xlens):
+        xs, xlens = self.encoder(xs, xlens)
+        predictions = self.ctc.beam_search(xs, xlens, self.beam)
         return predictions
 
 
