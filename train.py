@@ -79,6 +79,9 @@ def get_parser(parser=None):
         "--linear_units", type=int, default=1024, help="FFN intermediate size."
     )
     parser.add_argument(
+        "--cnn_module_kernel", type=int, default=31, help="Number of CNN channels."
+    )
+    parser.add_argument(
         "--eblocks", type=int, default=12, help="Number of encoder layers."
     )
     parser.add_argument(

@@ -23,6 +23,7 @@ class ASRModel(torch.nn.Module):
             attention_heads=params.attention_heads,
             linear_units=params.linear_units,
             num_blocks=params.eblocks,
+            cnn_module_kernel=params.cnn_module_kernel,
             dropout_rate=params.edropout,
             positional_dropout_rate=params.edropout,
             attention_dropout_rate=params.edropout,
