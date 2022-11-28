@@ -38,7 +38,7 @@ class Trainer:
         with open(params.valid_json, "rb") as f:
             valid_json = json.load(f)["utts"]
 
-        self.train_dataset, self.train_sampler, _ = create_loader(
+        self.train_dataset, self.train_sampler, self.train_num_batches = create_loader(
             train_json, params, is_train=True
         )
         self.valid_dataset, self.valid_sampler, _ = create_loader(
@@ -59,9 +59,7 @@ class Trainer:
             p.numel() for p in self.model.parameters() if p.requires_grad
         )
         params.tparams = total_params
-        logging.info(
-            "Built a model with {:2.2f}M Params".format(float(total_params) / 1000000)
-        )
+        logging.info(f"Built a model with {float(total_params) / 1000000:2.2f}M Params")
 
         ## Write out model config
         with open(os.path.join(params.expdir, "model.json"), "wb") as f:
@@ -130,7 +128,8 @@ class Trainer:
 
             if (i + 1) % self.params.log_interval == 0:
                 logging.info(
-                    f"[Epoch {self.epoch}, Batch={i}] Train: loss={loss.item():.4f}, wer={wer:.4f}, lr={self.opt.param_groups[0]['lr']}"
+                    f"[Epoch {self.epoch}, Batch={i}] Train: loss={loss.item():.4f}, wer={wer:.4f}, "
+                    f"lr={self.opt.param_groups[0]['lr']}"
                 )
 
             if (i + 1) % self.params.accum_grad == 0:
@@ -182,6 +181,10 @@ class Trainer:
         self.model.load_state_dict(checkpoint["model_state_dict"])
         self.opt.load_state_dict(checkpoint["optimizer_state_dict"])
         self.epoch = checkpoint["epoch"] + 1
+
+        # restore global step, otherwise the learning rate is messed up
+        self.scheduler.last_epoch = (checkpoint["epoch"] * self.train_num_batches) / self.params.accum_grad
+
         self.val_stats["best_epoch"] = checkpoint["epoch"]
         self.val_stats["best_loss"] = checkpoint["loss"]
 

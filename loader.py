@@ -86,10 +86,11 @@ def create_loader(
         start = end
         n += 1
     lengths = [len(x) for x in minibatches]
+    n_batches = len(minibatches)
     print(
         "[info] #Utts: {} | Created {} minibatches containing {} to {} samples, and on average {} samples".format(
             len(sorted_data),
-            len(minibatches),
+            n_batches,
             min(lengths),
             max(lengths),
             int(np.mean(lengths)),
@@ -107,7 +108,7 @@ def create_loader(
         pin_memory=True,
     )
 
-    return dataset, loader, minibatches
+    return dataset, loader, n_batches
 
 
 class MiniBatchSampler:
