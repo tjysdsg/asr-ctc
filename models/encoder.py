@@ -22,7 +22,7 @@ class ConvolutionModule(nn.Module):
         kernel_size (int): Kernerl size of conv layers.
     """
 
-    def __init__(self, channels, kernel_size, activation=nn.ReLU(), bias=True):
+    def __init__(self, channels, kernel_size, activation, bias=True):
         """Construct an ConvolutionModule object."""
         super(ConvolutionModule, self).__init__()
         # kernerl_size should be a odd number for 'SAME' padding
@@ -192,7 +192,7 @@ class TransformerEncoder(torch.nn.Module):
                 MultiHeadedAttention(
                     attention_heads, output_size, attention_dropout_rate
                 ),
-                ConvolutionModule(output_size, cnn_module_kernel),
+                ConvolutionModule(output_size, cnn_module_kernel, nn.SiLU()),
                 positionwise_layer(*positionwise_layer_args),
                 dropout_rate,
             ),

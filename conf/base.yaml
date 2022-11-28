@@ -3,7 +3,7 @@ attention_heads: 4
 linear_units: 1024
 eblocks: 12
 edropout: 0.1
-cnn_module_kernel: 31
+cnn_module_kernel: 15
 
 batch_bins: 6000000
 accum_grad: 2
@@ -11,6 +11,6 @@ nepochs: 20
 nworkers: 4
 log_interval: 100
 
-lr: 1e-4
+lr: 1e-3
 wdecay: 1e-6
 warmup_steps: 15000

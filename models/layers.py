@@ -153,7 +153,7 @@ class PositionwiseFeedForward(torch.nn.Module):
 
     """
 
-    def __init__(self, idim, hidden_units, dropout_rate, activation=torch.nn.ReLU()):
+    def __init__(self, idim, hidden_units, dropout_rate, activation=nn.SiLU()):
         """Construct an PositionwiseFeedForward object."""
         super(PositionwiseFeedForward, self).__init__()
         self.w_1 = torch.nn.Linear(idim, hidden_units)
