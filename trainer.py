@@ -199,27 +199,21 @@ class Trainer:
 
     def save_model(self):
         """Save the model snapshot after every epoch of training."""
-        if self.val_stats["loss"] < self.val_stats["best_loss"]:
-            # TODO: keep nbest models and average them
-            # old_ckpt = os.path.join(
-            #     self.params.model_dir, f'epoch{self.val_stats["best_epoch"]}.pth'
-            # )
-            # if os.path.exists(old_ckpt):
-            #     os.remove(old_ckpt)
-            self.val_stats["best_epoch"] = self.epoch
-            self.val_stats["best_loss"] = self.val_stats["loss"]
+        # if self.val_stats["loss"] < self.val_stats["best_loss"]:
+        self.val_stats["best_epoch"] = self.epoch
+        self.val_stats["best_loss"] = self.val_stats["loss"]
 
-            torch.save(
-                {
-                    "epoch": self.epoch,
-                    "model_state_dict": self.model.state_dict(),
-                    "optimizer_state_dict": self.opt.state_dict(),
-                    "loss": self.val_stats["loss"],
-                    "wer": self.val_stats["wer"],
-                },
-                os.path.join(self.params.model_dir, f"epoch{self.epoch}.pth"),
-            )
-            logging.info(f"[info] Save model after epoch {self.epoch}\n")
+        torch.save(
+            {
+                "epoch": self.epoch,
+                "model_state_dict": self.model.state_dict(),
+                "optimizer_state_dict": self.opt.state_dict(),
+                "loss": self.val_stats["loss"],
+                "wer": self.val_stats["wer"],
+            },
+            os.path.join(self.params.model_dir, f"epoch{self.epoch}.pth"),
+        )
+        logging.info(f"[info] Save model after epoch {self.epoch}\n")
 
     def log_epoch(self):
         """Write stats from the Training and Validation Statistics Dictionaries onto Tensorboard at the end of each epoch"""
