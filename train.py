@@ -136,7 +136,7 @@ def get_parser(parser=None):
     parser.add_argument(
         "--beam_size",
         type=int,
-        default=10,
+        default=-1,
     )
     return parser
 
