@@ -7,10 +7,10 @@ cnn_module_kernel: 15
 
 batch_bins: 6000000
 accum_grad: 2
-nepochs: 20
+nepochs: 30
 nworkers: 4
 log_interval: 100
 
 lr: 1e-3
 wdecay: 1e-6
-warmup_steps: 15000
+warmup_steps: 10000
