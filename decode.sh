@@ -1,1 +1,1 @@
-python decode.py --exp_dir exp/train_asr --ckpt_name val.wer.ave_5best.pth --decode_tag asr "$@"
+python decode.py --exp_dir exp/train_asr --decode_tag asr "$@"
