@@ -30,12 +30,8 @@ def get_parser(parser=None):
         type=str,
         help="Recognition Features",
     )
-    parser.add_argument(
-        "--exp_dir", default="exp/train_init", type=str, help="Training exp directory"
-    )
-    parser.add_argument(
-        "--ckpt_name", default="epoch40.pth", type=str, help="Checkpoint name"
-    )
+    parser.add_argument("--exp_dir", default="exp/train_asr", type=str, help="Training exp directory")
+    parser.add_argument("--ckpt_name", required=True, type=str, help="Checkpoint name")
     parser.add_argument("--decode_tag", default="test", type=str, help="Decoding tag")
     parser.add_argument(
         "--beam_size",
