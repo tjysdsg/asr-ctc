@@ -1,10 +1,11 @@
-from typing import Tuple
+from lm import WordLM
 from collections import defaultdict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import logging
+from typing import Dict, List
 
 
 class CTC(nn.Module):
@@ -61,7 +62,7 @@ class CTC(nn.Module):
 
         return results
 
-    def beam_search(self, hs_pad, lens, beam_size: int):
+    def beam_search(self, hs_pad, lens, beam_size: int, vocab: Dict[int, str], lm: WordLM):
         """
         Perform beam search for the CTC.
 
@@ -69,6 +70,8 @@ class CTC(nn.Module):
             hs_pad: (B, T, idim)
             lens: (B)
             beam_size: int
+            vocab: token index to its string
+            lm: Language model
         Returns:
             results: list of lists of ints
         """
@@ -90,25 +93,50 @@ class CTC(nn.Module):
 
         logging.info(f'\nBeam search on batch with {batch_size} samples')
         for i in range(batch_size):
-            results[i] = self._beam_search_trellis(x[i], lens[i], beam_size)
+            results[i] = self._beam_search_trellis(x[i], lens[i], beam_size, vocab, lm)
         return results
 
-    def _beam_search_trellis(self, x: np.ndarray, length: int, beam_size: int, blank=0, min_threshold=0.001):
+    def _beam_search_trellis(
+            self, x: np.ndarray, length: int, beam_size: int,
+            vocab: Dict[int, str], lm: WordLM,
+            space_char='▁', blank=0, min_threshold=0.001,
+            alpha=0.3, beta=0.3,
+    ):
+        """
+        https://arxiv.org/abs/1408.2873
+
+        Slightly modified because the BPE has the space character at the beginning of the token
+        """
         dim = x.shape[1]
+
+        def prefix_to_words(pref: str):
+            toks = [vocab[int(tok_i)] for tok_i in pref.split(' ') if tok_i != '']
+            if len(toks):
+                return ''.join(toks).split(space_char)
+            else:
+                return []
 
         hyps = ['']
         pb = defaultdict(int)  # prob_prefix_ends_with_blank
         pnb = defaultdict(int)  # prob_prefix_ends_with_non_blank
         pb[''] = 1
-        pnb[''] = 1
+        pnb[''] = 0
         for t in range(length):
             candidate_idx = [i for i in range(dim) if x[t][i] > min_threshold]
 
             new_pb = defaultdict(int)
             new_pnb = defaultdict(int)
-            for prefix in hyps:
+            for prefix in hyps:  # prefix is a space separated string containing token INDICES (easier for dict keys)
                 L = prefix.split(' ')
-                for i in candidate_idx:
+
+                # TODO: batch run language model
+                # curr_words = prefix_to_words(prefix)
+                # sentences = [prefix_to_words(f'{prefix} {i}') if i != blank else curr_words for i in candidate_idx]
+                # sentences = [' '.join(s) for s in sentences]
+                # lm_probs = lm(sentences)
+                # lm_probs = lm_probs[:, -1] ** alpha
+
+                for ci, i in enumerate(candidate_idx):
                     P = x[t][i]
 
                     if i == blank:  # extend with a blank
@@ -116,12 +144,16 @@ class CTC(nn.Module):
                     else:  # extend with a non-blank
                         new_prefix = f'{prefix} {i}'
 
-                        if len(L) > 0 and L[-1] == str(i):  # repeating the last token
+                        if L[-1] == str(i):  # repeating the last token
                             new_pnb[new_prefix] += P + pb[prefix]
-                            new_pnb[prefix] += P * pnb[prefix]
-                        # elif False:  # TODO: word language model
-                        #     pass
-                        else:  # extend with other non-blank token without ending the current word
+                            new_pnb[prefix] += P * pb[prefix]
+                        # extend with other non-blank token
+                        else:
+                            # TODO: language model
+                            # token = vocab[i]
+                            # lm_p = 1.0
+                            # if space_char in token and token != space_char and lm_probs is not None:
+                            #     lm_p = lm_probs[ci]
                             new_pnb[new_prefix] += P * (pb[prefix] + pnb[prefix])
 
                         # make use of discarded prefixes
@@ -138,8 +170,10 @@ class CTC(nn.Module):
                 hyp2score[k] += pnb[k]
 
             # top k
-            hyps = sorted(hyp2score, key=lambda l: hyp2score[l], reverse=True)[:beam_size]
-            # TODO: beta term: * (len(W(l)) + 1) ** beta
+            hyps = sorted(
+                # TODO: hyp2score, key=lambda l: hyp2score[l] * len(prefix_to_words(l)) ** beta, reverse=True
+                hyp2score, key=lambda l: hyp2score[l], reverse=True
+            )[:beam_size]
 
         # clean
         result = []
@@ -153,11 +187,19 @@ class CTC(nn.Module):
 
 
 def test_beam_search():
+    from train import load_configs
+    configs = load_configs(["--out-dir=exp", "--tag=test"])
+
     batch_size = 3
-    dim = 10
+    dim = len(configs.char_list)
     T = 5
 
-    ctc = CTC(dim, dim)
-    x = torch.rand((batch_size, T, dim))
-    res = ctc.beam_search(x, [T for _ in range(batch_size)], dim // 2)
+    ctc = CTC(dim, dim).cuda()
+    lm = WordLM().cuda()
+    x = torch.rand((batch_size, T, dim)).cuda()
+    res = ctc.beam_search(x, [T for _ in range(batch_size)], dim // 2, configs.char_list, lm)
     print(res)
+
+
+if __name__ == '__main__':
+    test_beam_search()

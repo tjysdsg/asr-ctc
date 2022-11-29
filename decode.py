@@ -6,7 +6,7 @@ import os
 import jiwer
 import logging
 import torch
-
+from lm import WordLM
 from models.asr_model import ASRModel
 from loader import create_loader
 from utils import to_device
@@ -69,12 +69,20 @@ def main(cmd_args):
     model = ASRModel(train_params)
     checkpoint = torch.load(os.path.join(args.exp_dir, "ckpts", args.ckpt_name))
     model.load_state_dict(checkpoint["model_state_dict"])
-    if torch.cuda.is_available():
-        model = model.cuda()
     logging.info(
         f'Load model from {os.path.join(args.exp_dir, "ckpts", args.ckpt_name)}'
     )
     logging.info(str(model))
+
+    # Language model
+    lm = WordLM()
+    logging.info("Language Model:")
+    logging.info(lm)
+
+    if torch.cuda.is_available():
+        print('Using GPU')
+        model = model.cuda()
+        lm = lm.cuda()
 
     ## Create decoding loader
     _, test_loader, _ = create_loader(recog_json, train_params, is_train=False)
@@ -98,7 +106,7 @@ def main(cmd_args):
                 )
 
             if train_params.beam_size > 0:
-                preds = model.decode_beam(feats, feat_lens)  # list of lists of ints
+                preds = model.decode_beam(feats, feat_lens, train_params.char_list, lm)  # list of lists of ints
             else:
                 preds = model.decode_greedy(feats, feat_lens)  # list of lists of ints
 

@@ -1,6 +1,5 @@
 import torch
 import configargparse
-
 from models.encoder import TransformerEncoder
 from models.ctc import CTC
 from utils import StatsCalculator
@@ -71,9 +70,9 @@ class ASRModel(torch.nn.Module):
 
         return predictions
 
-    def decode_beam(self, xs, xlens):
+    def decode_beam(self, xs, xlens, vocab, lm):
         xs, xlens = self.encoder(xs, xlens)
-        predictions = self.ctc.beam_search(xs, xlens, self.beam)
+        predictions = self.ctc.beam_search(xs, xlens, self.beam, vocab, lm)
         return predictions
 
 
