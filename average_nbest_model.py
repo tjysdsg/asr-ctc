@@ -24,12 +24,13 @@ def main():
             checkpoint = torch.load(path, map_location='cpu')
             model_dict = checkpoint["model_state_dict"]
             wer = checkpoint["wer"]
-            q.append((wer, model_dict))
+            q.append((wer, model_dict, file))
 
-    q = sorted(q, reverse=True)[:args.n]
+    q = sorted(q)[:args.n]
+    print('Checkpoint WER:', {e[2]: e[0] for e in q})
 
     avg = None
-    for wer, states in q:
+    for wer, states, _ in q:
         if avg is None:
             avg = states
         else:
